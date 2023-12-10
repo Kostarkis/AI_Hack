@@ -2,12 +2,18 @@
 import os
 from openai import OpenAI
 import dotenv
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
 
-dotenv.load_dotenv(dotenv.find_dotenv("../.env"))
+
+
+dotenv.load_dotenv(dotenv.find_dotenv(".env"))
 
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
 )
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+embeddings = OpenAIEmbeddings()
 
 subfolder_path = 'ProjectToBeAnalyzed\Django-School-Management-System'
 
@@ -32,7 +38,7 @@ def main():
                     # print(content)
 
                     completion = client.chat.completions.create(
-                        model="gpt-4-1106-preview",
+                        model="ft:gpt-3.5-turbo-1106:project-orion::8UEe6imY",
                         temperature=0.3,
                         top_p=0.99,
                         messages=[
@@ -42,7 +48,43 @@ def main():
                         ]
                     )
 
-                    print(completion.choices[0].message.content)
+                    completion_response = completion.choices[0].message.content
+                    print(completion_response)
+                    print()
+                    print()
+                    breakIf = False
+                    while (not breakIf):
+                        if (completion_response.find("##FRAGMENT_") != -1):
+                            print("GOOD0")
+                            itera = 11
+                            while(completion_response[itera]!=' ' or completion_response[itera]!='\\'):
+                                itera += 1
+                            print("GOOD1")
+                            completion_response = completion_response[itera-1:completion_response.__len__()-1]
+                            this_code_chunk = completion_response[0:completion_response.find("##FRAGMENT_")]
+                            completion_response = completion_response[completion_response.find("##FRAGMENT_"):completion_response.__len__()-1]
+                            print("GOOD2")
+                            #TODO
+                            #emmbedding_result =
+                            #chroma = Chroma.from_document(embeddings, this_code_chunk)
+                            #chroma.save("chroma")
+
+                            dependencies_text = this_code_chunk[this_code_chunk.find("DEPENDENCIES")+12: this_code_chunk.__len__()-1]
+                            this_code_chunk = this_code_chunk[0 : this_code_chunk.find("DEPENDENCIES")]
+                            this_code_chunk = this_code_chunk.strip()
+                            dependencies_text = dependencies_text.strip()
+                            dependencies_list = dependencies_text.split(", ")
+                            print("GOOD3")
+
+                            res = {
+                                "code_chunk": this_code_chunk,
+                                "dependencies": dependencies_list,
+                                #"embedding":
+                            }
+                            print(res)
+                        else:
+                            breakIf = True
+
             except Exception as e:
                 print(f"Error reading file {file_path}: {e}")
     print(f'Hi there')

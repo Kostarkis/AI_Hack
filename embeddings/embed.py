@@ -2,10 +2,14 @@ import os
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 
-os.environ["OPENAI_API_KEY"] = "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"
+import dotenv
 
-docs = None  # TODO: here goes the text
+dotenv.load_dotenv(dotenv.find_dotenv("../.env"))
+
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
+docs = "None"  # TODO: here goes the text
 
 embeddings = OpenAIEmbeddings()
-chroma = Chroma.from_embeddings(embeddings, docs)
+chroma = Chroma.from_document(embeddings, docs)
 chroma.save("chroma")
